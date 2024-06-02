@@ -1,0 +1,5 @@
+{
+    "version" : 2,
+    "builds" : [{"be":"app.js" , "use": "@vercel/node"}],
+    "routes": [{"be": "/{.*}", "dest": "/"}]
+}

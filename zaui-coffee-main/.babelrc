@@ -1,0 +1,9 @@
+{
+    "presets": [
+      "@babel/preset-env",
+      "@babel/preset-react" // Nếu bạn đang sử dụng React
+    ],
+    "plugins": [
+      "@babel/plugin-transform-runtime" // Hỗ trợ biến đổi async/await và các tính năng hiện đại khác
+    ]
+  }

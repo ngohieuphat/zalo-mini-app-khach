@@ -1,10 +1,74 @@
-import React, { FC } from "react";
-import { Box, Header, Icon, Page, Text } from "zmp-ui";
+import React, { FC, useState } from "react";
+import { Button, Box, Header, Icon, Page, Text } from "zmp-ui";
+import { Payment } from "zmp-sdk";
 import subscriptionDecor from "static/subscription-decor.svg";
 import { ListRenderer } from "components/list-renderer";
 import { useToBeImplemented } from "hooks";
+import {getMacAndOrderData} from "../../ai/order.js"
 
-const Subscription: FC = () => {
+const handleCreateOrder = async (setOrderId) => {
+  try {
+    // Order data
+    const orderData = {
+      amount: 50000,
+      desc: "Thanh toán 50.000",
+      extradata: JSON.stringify({
+        storeName: "Cửa hàng A",
+        storeId: "123",
+        orderGroupId: "345",
+        myTransactionId: "12345678",
+        notes: "Đây là giá trị gửi thêm",
+      }),
+      method: JSON.stringify({
+        id: "COD_SANBOX",
+        isCustom: false,
+      }),
+      item: [
+        { id: "1", amount: 20000 },
+        { id: "2", amount: 30000 },
+      ],
+    };
+
+    // Get MAC and updated order data from the server
+    const { mac, orderData: updatedOrderData } = await getMacAndOrderData(orderData);
+    console.log('Received MAC:', mac);
+
+    // Add MAC to order data
+    const finalOrderData = {
+      ...updatedOrderData,
+      mac,
+    };
+    console.log('Final Order Data:', finalOrderData);
+    console.log('Input parameters for Payment.createOrder:', {
+      desc: orderData.desc,
+      item: orderData.item,
+      amount: orderData.amount,
+      mac: mac,
+    });
+    // Send the create order request with MAC
+    Payment.createOrder({
+      desc: orderData.desc,
+      item: orderData.item,
+      amount: orderData.amount,
+      mac: mac,
+      success: function(data) {
+        // Order creation successful
+        const orderId = data.orderId;
+        console.log('Order ID:', orderId);
+        setOrderId(orderId);
+      },
+      fail: function(err) {
+        // Order creation failed
+        console.error('Order creation failed:', err);
+      },
+    });
+  } catch (error) {
+    console.error('Error in handleCreateOrder:', error);
+  }
+};
+
+
+const Subscription = function() {
   const onClick = useToBeImplemented();
   return (
     <Box className="m-4" onClick={onClick}>
@@ -23,7 +87,7 @@ const Subscription: FC = () => {
   );
 };
 
-const Personal: FC = () => {
+const Personal = function() {
   const onClick = useToBeImplemented();
 
   return (
@@ -62,7 +126,7 @@ const Personal: FC = () => {
   );
 };
 
-const Other: FC = () => {
+const Other = function() {
   const onClick = useToBeImplemented();
 
   return (
@@ -101,13 +165,21 @@ const Other: FC = () => {
   );
 };
 
-const ProfilePage: FC = () => {
+const ProfilePage = function() {
+  const [orderId, setOrderId] = useState("");
+
   return (
     <Page>
       <Header showBackIcon={false} title="&nbsp;" />
       <Subscription />
       <Personal />
       <Other />
+      <Box className="m-4">
+        <Button onClick={() => handleCreateOrder(setOrderId)} className="bg-blue-500 text-white">
+          Tạo Đơn Hàng
+        </Button>
+        {orderId && <Box>Order ID: {orderId}</Box>}
+      </Box>
     </Page>
   );
 };
